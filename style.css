@@ -94,7 +94,7 @@ nav {
     opacity: 1;
     visibility: visible;
     transform: translate(-50%, 0);
-
+}
 .image-reveal {
     position: fixed;
     top: 50%;
@@ -213,5 +213,3 @@ nav {
     border: 1px solid #b7d7ff;
 
 }   
-
-}
