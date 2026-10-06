@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4Real</title>
+    <title>Document</title>
     <link rel="stylesheet" href="style.css">
 </head>
+<body>
+    <h1></h1>
 <body class="body">
 
             <header>
                 <nav>
                     <ul class="links">
                         <li><a href="index.html">Home</a></li>
-                        <li><a href="blur.html">Pixel mode</a></li>
+                        <li><a href="blur.html">Blur mode</a></li>
                         <li><a href="zoom.html">Zoom mode</a></li>
                     </ul>
                 </nav>
@@ -26,10 +28,17 @@
                 <img  src="4real-cat.png" alt="4real-cat">
             </section>
             <section class="mode-buttons">
-                <button type="button" class="mode-btn">Pixel mode</button>
-                <button type="button" class="mode-btn">Zoom mode</button>
+                <div class="mode-tooltip">
+                    <a class="mode-btn" href="blur.html">Blur mode</a>
+                    <span class="tooltip-text">Blur the image to hide details.</span>
+                </div>
+                <div class="mode-tooltip">
+                    <a class="mode-btn" href="zoom.html">Zoom mode</a>
+                    <span class="tooltip-text">Zoom in on the image to see details.</span>
+                </div>
             </section>
         </main>
+
 
     <script src="script.js"></script>
 </body>
