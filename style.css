@@ -1,0 +1,28 @@
+.section{
+    height: 80px;
+    width: 150px;
+    background-color: purple;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 5%;
+}
+
+
+.hidden{
+    display: none;
+}
+
+#info {
+    width: 50%;
+    height: 50%;
+}
+
+#blokje{
+    background-color: gray;
+    border-radius: 20px;
+    padding: 2px;
+    width: 20vw;
+    color: white;
+}
