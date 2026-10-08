@@ -216,12 +216,14 @@ nav {
 .section{
     height: 80px;
     width: 150px;
-    background-color: purple;
+    background-color: #4fb5da;
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
     border-radius: 5%;
+    position: sticky;
+    top: 0;
 }
 
 
@@ -240,4 +242,6 @@ nav {
     padding: 2px;
     width: 20vw;
     color: white;
+    position: sticky;
+    top: 0;
 }
