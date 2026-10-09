@@ -197,7 +197,7 @@ nav {
     margin-top: 1rem;
 }
 
-.answer-btn {
+#answer-btn {
     position: absolute;
     top: 73%;
     left: 64%;
@@ -205,14 +205,20 @@ nav {
     color: white;
 }
 
-.answer-box {
+#answer-box {
     position: absolute;
     top: 73%;
     left: 67.6%;
     background: #eaf4ff;
     border: 1px solid #b7d7ff;
 
-}   
+}
+#resultaat{
+    position: absolute;
+    top: 75%;
+    left: 67.6%;
+}  
+
 .section{
     height: 80px;
     width: 150px;

@@ -1,5 +1,8 @@
 const revealBtn = document.querySelector("#reveal-button");
 const revealImg = document.querySelector("#reveal-image");
+const btnSubmit = document.getElementById("answer-btn"); 
+const answer = document.getElementById("answer-box"); 
+const result = document.getElementById("resultaat");
 
 if (revealBtn && revealImg) {
     revealBtn.addEventListener("click", () => {
@@ -22,4 +25,12 @@ const blokje = document.querySelector('#blokje')
 info.addEventListener('click', () => {
     console.log('hoi');
     blokje.classList.toggle('hidden');
+});
+
+btnSubmit.addEventListener("click", function () { 
+    if (answer.value.trim() === "") { 
+    result.textContent = "Niks ingevuld"; 
+    } else { 
+    result.textContent = answer.value + " is het goede antwoord"; 
+} 
 });
