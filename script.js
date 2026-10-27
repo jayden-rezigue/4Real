@@ -3,6 +3,8 @@ const revealImg = document.querySelector("#reveal-image");
 const btnSubmit = document.getElementById("answer-btn"); 
 const answer = document.getElementById("answer-box"); 
 const result = document.getElementById("resultaat");
+const hint = document.getElementById("hint");
+let wrongAttempts = 0;
 
 if (revealBtn && revealImg) {
     revealBtn.addEventListener("click", () => {
@@ -27,10 +29,24 @@ info.addEventListener('click', () => {
     blokje.classList.toggle('hidden');
 });
 
-btnSubmit.addEventListener("click", function () { 
-    if (answer.value.trim() === "") { 
-    result.textContent = "Niks ingevuld"; 
-    } else { 
-    result.textContent = answer.value + " is het goede antwoord"; 
-} 
+btnSubmit.addEventListener("click", function () {
+    const guess = answer.value.trim().toLowerCase();
+
+    if (guess === "") {
+        result.textContent = "Niks ingevuld";
+        return;
+    }
+
+    if (guess === "cat") {
+        result.textContent = "Correct!";
+        wrongAttempts = 0;
+        return;
+    }
+
+    wrongAttempts += 1;
+    result.textContent = "Incorrect. Try again.";
+
+    if (wrongAttempts >= 2 && hint) {
+        hint.classList.remove("hidden");
+    }
 });

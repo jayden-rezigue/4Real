@@ -221,13 +221,19 @@ nav {
     left: 67.6%;
     background: #eaf4ff;
     border: 1px solid #b7d7ff;
-
 }
-#resultaat{
+
+#resultaat {
     position: absolute;
     top: 75%;
     left: 67.6%;
-}  
+}
+
+#hint {
+    position: absolute;
+    top: 80%;
+    left: 67.6%;
+}
 
 .section{
     height: 80px;
