@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="body">
+<body class="body" data-game-mode="zoom">
                 <header>
                 <nav>
                     <ul class="links">
@@ -26,7 +26,7 @@
         <br><br>
         Antwoord geven: Typ je antwoord in het antwoordvak en druk op de knop om je antwoord in te sturen.
         <br><br>
-        Punten verdienen: Heb je het goed? Dan krijg je punten. Als je meerdere antwoorden achter elkaar goed hebt, krijg je extra punten.
+        Punten verdienen: Elk goed antwoord is 1 punt. Je speelt 3 rondes.
         <br><br>
         Zoom Out: De afbeelding begint ingezoomd. Hoe langer je wacht, hoe meer je de afbeelding kunt zien.
         <br><br>
@@ -35,15 +35,17 @@
         Kies je spelmodus: Kies vóór het spelen tussen Zoom Out en Blurry.
         </p>
     </section>
+            <p id="round-status" class="round-status"></p>
             <section class="zoom-reveal">
-                <img id="zoom-image" class="zoom-image" src="4real-cat.png">
-                <button type="button" class="zoom-button" id="zoom-button">Reveal image</button>
+                <img id="zoom-image" class="zoom-image" src="4real-cat.png" alt="Een kat">
+                <button type="button" class="zoom-button" id="zoom-button">Afbeelding onthullen</button>
             </section>
-            <div class="mode-group">
-                <button type="button" id="answer-btn">Answer</button>
-                <input id="answer-box">
-                <p id="resultaat"></p>
-            </div>
+            <form id="answer-form" class="mode-group">
+                <button type="submit" id="answer-btn">Antwoord</button>
+                <input id="answer-box" type="text" aria-label="Jouw antwoord" required>
+                <p id="resultaat" aria-live="polite"></p>
+                <button type="button" id="next-round-btn" class="next-round-btn" hidden>Volgende ronde</button>
+            </form>
     <script src="script.js"></script>
 </body>
 </html>
