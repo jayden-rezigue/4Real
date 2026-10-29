@@ -218,7 +218,7 @@ nav {
 #answer-box {
     position: absolute;
     top: 73%;
-    left: 67.6%;
+    left: 68%;
     background: #eaf4ff;
     border: 1px solid #b7d7ff;
 
@@ -262,7 +262,3 @@ nav {
     top: 0;
 }
 
-#teller{
-display: flex;
-justify-content: flex-end;
-}
