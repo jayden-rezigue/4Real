@@ -70,6 +70,27 @@ nav {
     text-align: center;
 }
 
+.buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.result-container {
+    text-align: center;
+}
+
+.endscreen-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    font: inherit;
+    cursor: pointer;
+    text-align: center;
+}
+
 .mode-tooltip {
     position: relative;
 }
@@ -77,6 +98,15 @@ nav {
 .mode-btn:hover,
 .mode-btn:focus-visible {
     background-color: #88bcff;
+}
+
+.endscreen-btn {
+    background-color: #4fb5da;
+}
+
+.endscreen-btn:hover,
+.endscreen-btn:focus-visible {
+    background-color: #3299bf;
 }
 
 
