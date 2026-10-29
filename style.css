@@ -261,3 +261,8 @@ nav {
     position: sticky;
     top: 0;
 }
+
+#teller{
+display: flex;
+justify-content: flex-end;
+}

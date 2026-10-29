@@ -4,6 +4,12 @@ const btnSubmit = document.getElementById("answer-btn");
 const answer = document.getElementById("answer-box"); 
 const result = document.getElementById("resultaat");
 
+const teller = document.querySelector('#teller');
+
+let score = 0;
+const goedAntwoord = "cat";
+
+
 if (revealBtn && revealImg) {
     revealBtn.addEventListener("click", () => {
         revealImg.classList.add("is-revealed");
@@ -27,10 +33,14 @@ info.addEventListener('click', () => {
     blokje.classList.toggle('hidden');
 });
 
-btnSubmit.addEventListener("click", function () { 
-    if (answer.value.trim() === "") { 
-    result.textContent = "Niks ingevuld"; 
-    } else { 
-    result.textContent = answer.value + " is het goede antwoord"; 
-} 
+btnSubmit.addEventListener("click", function () {
+    if (answer.value.trim() === "") {
+        result.textContent = "Niks ingevuld";
+    } else if (answer.value.trim().toLowerCase() === goedAntwoord.toLowerCase()) {
+        result.textContent = "Goed antwoord!";
+        score++;
+        teller.textContent = `streak: ${score}`;
+    } else {
+        result.textContent = "Fout antwoord!";
+    }
 });
