@@ -217,11 +217,6 @@ if (gameMode && (revealImg || zoomImg)) {
 }
 
 
-if (info && blokje) {
-    info.addEventListener("click", () => {
-        blokje.classList.toggle("hidden");
-    });
-}
 
 const finalScore = document.getElementById("finalScore");
 const resultSummary = document.getElementById("resultSummary");

@@ -3,8 +3,8 @@
     margin: 0;
 }
 .title{
-    display: flex;
-    justify-content: flex-start;
+    position: absolute;
+    left: 5vw;
     font-size: 2rem;
 }
 .text{
@@ -47,7 +47,7 @@ nav {
 }
 .links a {
     text-decoration: none;
-    background-color: rgb(134, 198, 251);
+    /* background-color: rgb(134, 198, 251); */
     padding: 1rem;
     color:  rgb(238, 247, 255);
 }
@@ -266,7 +266,7 @@ nav {
 #answer-box {
     position: absolute;
     top: 73%;
-    left: 68%;
+    left: 69%;
     background: #eaf4ff;
     border: 1px solid #b7d7ff;
 
@@ -291,22 +291,33 @@ nav {
 }
 
 
-.hidden{
-    display: none;
+.info-container {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
 }
 
 #info {
-    width: 50%;
-    height: 50%;
+    position: relative;
+    padding: 12px 25px;
+    cursor: pointer;
+    background-color: #96c7ff;
+    border-radius: 10%;
 }
 
-#blokje{
-    background-color: gray;
-    border-radius: 20px;
-    padding: 2px;
-    width: 20vw;
-    color: white;
-    position: sticky;
-    top: 0;
+#blokje {
+    position: absolute;
+    bottom: 55px;
+    left: 0;
+    width: 280px;
+    background-color: white;
+    color: black;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
 }
 
+.hidden {
+    display: none;
+}
