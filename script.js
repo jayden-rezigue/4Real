@@ -16,6 +16,7 @@ const hint = document.getElementById("hint");
 const nextRoundBtn = document.getElementById("next-round-btn");
 const roundStatus = document.getElementById("round-status");
 const scoreElement = document.querySelector("#score");
+const teller = document.getElementById("teller");
 const gameMode = document.body.dataset.gameMode;
 
 function getGameState() {
@@ -149,6 +150,9 @@ if (gameMode && (revealImg || zoomImg)) {
                 gameState.currentRoundAnswered = true;
                 gameState.lastAnswerCorrect = true;
                 gameState.score += 1;
+                if (teller) {
+                    teller.textContent = `Streak: ${gameState.score}`;
+                }
                 result.textContent = "Goed geraden! Je krijgt een punt.";
                 saveGameState(gameState);
                 updateRoundStatus();
