@@ -1,43 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="body">
+<body class="body" data-game-mode="blur">
                 <header>
                 <nav>
                     <ul class="links">
                         <li><a href="index.html">Home</a></li>
-                        <li><a href="blur.html">Pixel mode</a></li>
+                        <li><a href="blur.html">Blur mode</a></li>
                         <li><a href="zoom.html">Zoom mode</a></li>
                     </ul>
                 </nav>
             </header>
-                <section class="section">
-        <button id="info">Info</button>
-    </section>
-
+                  <div class="info-container">
     <section id="blokje" class="hidden">
         <p class="tekst">
-        Doel van het spel: Raad zo snel mogelijk wat er op de afbeelding staat.
-        <br><br>
-        Antwoord geven: Typ je antwoord in het antwoordvak en druk op de knop om je antwoord in te sturen.
-        <br><br>
-        Punten verdienen: Heb je het goed? Dan krijg je punten. Als je meerdere antwoorden achter elkaar goed hebt, krijg je extra punten.
-        <br><br>
-        Zoom Out: De afbeelding begint ingezoomd. Hoe langer je wacht, hoe meer je de afbeelding kunt zien.
-        <br><br>
-        Blurry: De afbeelding begint wazig. Hoe langer je wacht, hoe scherper de afbeelding wordt.
-        <br><br>
-        Kies je spelmodus: Kies vóór het spelen tussen Zoom Out en Blurry.
+            Doel van het spel: Raad zo snel mogelijk wat er op de afbeelding staat.
+            <br><br>
+            Antwoord geven: Typ je antwoord in het antwoordvak en druk op de knop om je antwoord in te sturen.
+            <br><br>
+            Punten verdienen: Elk goed antwoord levert punten op.
+            <br><br>
+            Zoom Out: De afbeelding begint ingezoomd. Hoe langer je wacht, hoe meer je kunt zien.
+            <br><br>
+            Blurry: De afbeelding begint wazig. Hoe langer je wacht, hoe scherper de afbeelding wordt.
+            <br><br>
+            Kies je spelmodus: Kies vóór het spelen tussen Zoom Out en Blurry.
         </p>
     </section>
+
+    <button id="info">Info</button>
+</div>
+            <p id="round-status" class="round-status"></p>
             <section class="image-reveal">
-                <img id="reveal-image" class="reveal-image" src="4real-cat.png">
-                <button type="button" class="reveal-button" id="reveal-button">Reveal image</button>
+                <img id="reveal-image" class="reveal-image" src="4real-cat.png" alt="Een kat">
+                <button type="button" class="reveal-button" id="reveal-button">Afbeelding onthullen</button>
             </section>
             <div class="mode-group">
                 <button type="button" id="answer-btn">Answer</button>
@@ -45,6 +46,16 @@
                 <p id="resultaat"></p>
                 <p id="hint" class="hidden">hint: Meow</p>
             </div>
+            <form id="answer-form" class="mode-group">
+                <button type="submit" id="answer-btn">Antwoord</button>
+                <input id="answer-box" type="text" aria-label="Jouw antwoord" required>
+                <p id="resultaat"></p>
+                <p id="hint" class="hidden">hint: Meow</p>
+                <button type="button" id="next-round-btn" class="next-round-btn" hidden>Volgende ronde</button>
+            </form>
+
+            <h3 id="teller">streak:</h3>
+            <h3 id="score">points:</h3>
 
     <script src="script.js"></script>
 </body>
