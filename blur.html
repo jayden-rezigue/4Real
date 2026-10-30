@@ -40,16 +40,10 @@
                 <img id="reveal-image" class="reveal-image" src="4real-cat.png" alt="Een kat">
                 <button type="button" class="reveal-button" id="reveal-button">Afbeelding onthullen</button>
             </section>
-            <div class="mode-group">
-                <button type="button" id="answer-btn">Answer</button>
-                <input id="answer-box" type="text">
-                <p id="resultaat"></p>
-                <p id="hint" class="hidden">hint: Meow</p>
-            </div>
             <form id="answer-form" class="mode-group">
                 <button type="submit" id="answer-btn">Antwoord</button>
                 <input id="answer-box" type="text" aria-label="Jouw antwoord" required>
-                <p id="resultaat"></p>
+                <p id="resultaat" aria-live="polite"></p>
                 <p id="hint" class="hidden">hint: Meow</p>
                 <button type="button" id="next-round-btn" class="next-round-btn" hidden>Volgende ronde</button>
             </form>

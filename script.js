@@ -1,116 +1,21 @@
-
-const scoreElement = document.querySelector("#score");
 const TOTAL_ROUNDS = 3;
+const MAX_WRONG_ATTEMPTS = 3;
+const HINT_AFTER_ATTEMPTS = 2;
 const GAME_STATE_KEY = "4real-game-state";
 
 const revealBtn = document.querySelector("#reveal-button");
 const revealImg = document.querySelector("#reveal-image");
 const zoomBtn = document.querySelector("#zoom-button");
 const zoomImg = document.querySelector("#zoom-image");
-
-const btnSubmit = document.getElementById("answer-btn");
+const info = document.getElementById("info");
+const blokje = document.querySelector("#blokje");
+const answerForm = document.querySelector("#answer-form");
 const answer = document.getElementById("answer-box");
 const result = document.getElementById("resultaat");
 const hint = document.getElementById("hint");
-let wrongAttempts = 0;
-
-const info = document.getElementById("info");
-const blokje = document.querySelector("#blokje");
-
-const goedAntwoord = "cat";
-
-let score = 0;
-let revealPhase = 1;
-let answeredCorrectly = false;
-
-
-if (revealBtn && revealImg) {
-    revealBtn.addEventListener("click", () => {
-        revealImg.classList.add("is-revealed");
-        revealPhase = 2;
-        revealBtn.remove();
-    });
-}
-
-
-if (zoomBtn && zoomImg) {
-    zoomBtn.addEventListener("click", () => {
-        zoomImg.classList.add("is-revealed");
-        revealPhase = 3;
-        zoomBtn.remove();
-    });
-}
-
-
-btnSubmit.addEventListener("click", function () {
-    const guess = answer.value.trim().toLowerCase();
-
-    if (guess === "") {
-        result.textContent = "Niks ingevuld";
-        return;
-    }
-
-    if (guess === "cat") {
-        result.textContent = "Correct!";
-        wrongAttempts = 0;
-        return;
-    }
-
-    wrongAttempts += 1;
-    result.textContent = "Incorrect. Try again.";
-
-    if (wrongAttempts >= 2 && hint) {
-        hint.classList.remove("hidden");
-    }
-});
-if (info && blokje) {
-    info.addEventListener("click", () => {
-        blokje.classList.toggle("hidden");
-    });
-}
-
-
-if (btnSubmit && answer && result && scoreElement) {
-    btnSubmit.addEventListener("click", () => {
-        if (answer.value.trim() === "") {
-            result.textContent = "Niks ingevuld";
-        } else if (
-            answer.value.trim().toLowerCase() ===
-            goedAntwoord.toLowerCase()
-        ) {
-            if (!answeredCorrectly) {
-                result.textContent = "Goed antwoord!";
-                updateScore(getPoints());
-                answeredCorrectly = true;
-            } else {
-                result.textContent =
-                    "Je hebt deze afbeelding al goed geraden!";
-            }
-        } else {
-            result.textContent = "Fout antwoord!";
-        }
-    });
-}
-
-
-function updateScore(points) {
-    score += points;
-    scoreElement.textContent = `Points: ${score}`;
-}
-
-
-function getPoints() {
-    if (revealPhase === 1) {
-        return 100;
-    } else if (revealPhase === 2) {
-        return 50;
-    } else {
-        return 25;
-    }
-}
-const answerForm = document.querySelector("#answer-form");
 const nextRoundBtn = document.getElementById("next-round-btn");
 const roundStatus = document.getElementById("round-status");
+const scoreElement = document.querySelector("#score");
 const gameMode = document.body.dataset.gameMode;
 
 function getGameState() {
@@ -132,6 +37,12 @@ function finishGame(state) {
     window.location.href = "endscreen.html";
 }
 
+if (info && blokje) {
+    info.addEventListener("click", () => {
+        blokje.classList.toggle("hidden");
+    });
+}
+
 if (gameMode && (revealImg || zoomImg)) {
     let gameState = getGameState();
 
@@ -140,21 +51,66 @@ if (gameMode && (revealImg || zoomImg)) {
             mode: gameMode,
             currentRound: 1,
             score: 0,
+            wrongAttempts: 0,
             currentRoundAnswered: false,
             completed: false
         };
         saveGameState(gameState);
+    } else if (typeof gameState.wrongAttempts !== "number") {
+        gameState.wrongAttempts = 0;
     }
 
     const updateRoundStatus = () => {
         roundStatus.textContent = `Ronde ${gameState.currentRound} van ${TOTAL_ROUNDS}`;
+        if (scoreElement) {
+            scoreElement.textContent = `Points: ${gameState.score}`;
+        }
+    };
+
+    const showRoundResult = () => {
+        if (!gameState.currentRoundAnswered) {
+            return;
+        }
+
+        answer.disabled = true;
+        answerForm.querySelector('button[type="submit"]').hidden = true;
+        nextRoundBtn.hidden = false;
+        result.textContent = gameState.lastAnswerCorrect
+            ? "Goed geraden! Je krijgt een punt."
+            : `Helaas, drie keer fout. Het was een kat.`;
+    };
+
+    const startNextRound = () => {
+        if (gameState.currentRound === TOTAL_ROUNDS) {
+            finishGame(gameState);
+            return;
+        }
+
+        gameState.currentRound += 1;
+        gameState.wrongAttempts = 0;
+        gameState.currentRoundAnswered = false;
+        delete gameState.lastAnswerCorrect;
+        saveGameState(gameState);
+        updateRoundStatus();
+        answer.value = "";
+        answer.disabled = false;
+        answerForm.querySelector('button[type="submit"]').hidden = false;
+        result.textContent = "";
+        hint.classList.add("hidden");
+        nextRoundBtn.hidden = true;
+
+        if (revealImg) {
+            revealImg.classList.remove("is-revealed");
+            revealBtn.hidden = false;
+        }
+
+        if (zoomImg) {
+            zoomImg.classList.remove("is-revealed");
+            zoomBtn.hidden = false;
+        }
     };
 
     updateRoundStatus();
-
-    window.setTimeout(() => {
-        finishGame(gameState);
-    }, 3 * 60 * 1000);
 
     if (revealBtn && revealImg) {
         revealBtn.addEventListener("click", () => {
@@ -170,15 +126,11 @@ if (gameMode && (revealImg || zoomImg)) {
         });
     }
 
-    if (answerForm && answer && result && nextRoundBtn) {
-        if (gameState.currentRoundAnswered) {
-            answer.disabled = true;
-            answerForm.querySelector("button").hidden = true;
-            nextRoundBtn.hidden = false;
-            result.textContent = gameState.lastAnswerCorrect
-                ? "Goed geraden! Je krijgt een punt."
-                : "Helaas, dat is niet goed. Het was een kat.";
+    if (answerForm && answer && result && hint && nextRoundBtn) {
+        if (gameState.wrongAttempts >= HINT_AFTER_ATTEMPTS) {
+            hint.classList.remove("hidden");
         }
+        showRoundResult();
 
         answerForm.addEventListener("submit", event => {
             event.preventDefault();
@@ -187,59 +139,47 @@ if (gameMode && (revealImg || zoomImg)) {
                 return;
             }
 
-            const submittedAnswer = answer.value.trim().toLocaleLowerCase();
+            const submittedAnswer = answer.value.trim().toLowerCase();
             if (!submittedAnswer) {
                 result.textContent = "Vul eerst een antwoord in.";
                 return;
             }
 
-            const isCorrect = ["kat", "cat"].includes(submittedAnswer);
-            gameState.currentRoundAnswered = true;
-            gameState.lastAnswerCorrect = isCorrect;
-            if (isCorrect) {
+            if (["kat", "cat"].includes(submittedAnswer)) {
+                gameState.currentRoundAnswered = true;
+                gameState.lastAnswerCorrect = true;
                 gameState.score += 1;
                 result.textContent = "Goed geraden! Je krijgt een punt.";
-            } else {
-                result.textContent = "Helaas, dat is niet goed. Het was een kat.";
-            }
-
-            saveGameState(gameState);
-            answer.disabled = true;
-            answerForm.querySelector("button").hidden = true;
-            nextRoundBtn.hidden = false;
-        });
-
-        nextRoundBtn.addEventListener("click", () => {
-            if (gameState.currentRound === TOTAL_ROUNDS) {
-                finishGame(gameState);
+                saveGameState(gameState);
+                updateRoundStatus();
+                showRoundResult();
                 return;
             }
 
-            gameState.currentRound += 1;
-            gameState.currentRoundAnswered = false;
-            delete gameState.lastAnswerCorrect;
+            gameState.wrongAttempts += 1;
+            if (gameState.wrongAttempts >= HINT_AFTER_ATTEMPTS) {
+                hint.classList.remove("hidden");
+            }
+
+            if (gameState.wrongAttempts >= MAX_WRONG_ATTEMPTS) {
+                gameState.currentRoundAnswered = true;
+                gameState.lastAnswerCorrect = false;
+                saveGameState(gameState);
+                showRoundResult();
+                return;
+            }
+
+            result.textContent = "Fout antwoord! Probeer het nog eens.";
             saveGameState(gameState);
-            updateRoundStatus();
-            answer.value = "";
-            answer.disabled = false;
-            answerForm.querySelector("button").hidden = false;
-            result.textContent = "";
-            nextRoundBtn.hidden = true;
-
-            if (revealImg) {
-                revealImg.classList.remove("is-revealed");
-                revealBtn.hidden = false;
-            }
-
-            if (zoomImg) {
-                zoomImg.classList.remove("is-revealed");
-                zoomBtn.hidden = false;
-            }
         });
+
+        nextRoundBtn.addEventListener("click", startNextRound);
     }
+
+    window.setTimeout(() => {
+        finishGame(gameState);
+    }, 3 * 60 * 1000);
 }
-
-
 
 const finalScore = document.getElementById("finalScore");
 const resultSummary = document.getElementById("resultSummary");

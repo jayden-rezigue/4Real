@@ -40,22 +40,16 @@
                 <img id="zoom-image" class="zoom-image" src="4real-cat.png" alt="Een kat">
                 <button type="button" class="zoom-button" id="zoom-button">Afbeelding onthullen</button>
             </section>
-            <div class="mode-group">
-                <button type="button" id="answer-btn">Answer</button>
-                <input id="answer-box">
-                <p id="resultaat" aria-live="polite"></p>
-                <p id="hint" class="hidden" aria-live="polite">hint: Meow</p>
-            </div>
-
-            <h3 id="teller">streak:</h3>
-            <h3 id="score">points:</h3>
-
             <form id="answer-form" class="mode-group">
                 <button type="submit" id="answer-btn">Antwoord</button>
                 <input id="answer-box" type="text" aria-label="Jouw antwoord" required>
                 <p id="resultaat" aria-live="polite"></p>
+                <p id="hint" class="hidden" aria-live="polite">hint: Meow</p>
                 <button type="button" id="next-round-btn" class="next-round-btn" hidden>Volgende ronde</button>
             </form>
+
+            <h3 id="teller">streak:</h3>
+            <h3 id="score">points:</h3>
     <script src="script.js"></script>
 </body>
 </html>
