@@ -34,6 +34,33 @@ nav {
     background-color: #4fb5da;
     padding: 1rem;
 }
+.home-nav {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+.home-nav .links {
+    position: absolute;
+    left: 50%;
+    width: auto;
+    margin: 0;
+    transform: translateX(-50%);
+}
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.nav-brand .title {
+    position: static;
+    margin: 0;
+}
+.nav-brand .cat {
+    width: 80px;
+    margin: 0;
+}
 .links {
     display: flex;
     justify-content: center;
@@ -175,6 +202,11 @@ nav {
 .reveal-image.is-revealed {
     filter: blur(0);
     opacity: 1;
+}
+
+.reveal-image.is-resetting,
+.zoom-image.is-resetting {
+    transition: none;
 }
 
 .reveal-button {

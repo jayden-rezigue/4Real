@@ -1,7 +1,33 @@
-const TOTAL_ROUNDS = 3;
+async function initializeGame() {
+const isGamePage = Boolean(document.body.dataset.gameMode);
+const isResultsPage = Boolean(document.getElementById("finalScore"));
+if (!isGamePage && !isResultsPage) {
+    return;
+}
+
+const response = await fetch("img.json");
+if (!response.ok) {
+    throw new Error(`Could not load img.json (${response.status}).`);
+}
+
+const ROUNDS = await response.json();
+if (
+    !Array.isArray(ROUNDS) ||
+    ROUNDS.length === 0 ||
+    ROUNDS.some(round =>
+        typeof round.image !== "string" ||
+        typeof round.name !== "string" ||
+        typeof round.hint !== "string"
+    )
+) {
+    throw new Error("img.json must contain rounds with image, name, and hint.");
+}
+
+const TOTAL_ROUNDS = ROUNDS.length;
 const MAX_WRONG_ATTEMPTS = 3;
 const HINT_AFTER_ATTEMPTS = 2;
 const GAME_STATE_KEY = "4real-game-state";
+const GAME_VERSION = 2;
 
 const revealBtn = document.querySelector("#reveal-button");
 const revealImg = document.querySelector("#reveal-image");
@@ -38,6 +64,28 @@ function finishGame(state) {
     window.location.href = "endscreen.html";
 }
 
+function updateRoundImage(roundNumber, resetReveal = false) {
+    const round = ROUNDS[roundNumber - 1];
+    const image = revealImg || zoomImg;
+
+    if (!round || !image) {
+        return;
+    }
+
+    if (resetReveal) {
+        image.classList.add("is-resetting");
+        image.classList.remove("is-revealed");
+    }
+
+    image.src = round.image;
+    image.alt = round.name;
+    hint.textContent = round.hint;
+
+    if (resetReveal) {
+        requestAnimationFrame(() => image.classList.remove("is-resetting"));
+    }
+}
+
 if (info && blokje) {
     info.addEventListener("click", () => {
         blokje.classList.toggle("hidden");
@@ -47,8 +95,14 @@ if (info && blokje) {
 if (gameMode && (revealImg || zoomImg)) {
     let gameState = getGameState();
 
-    if (!gameState || gameState.mode !== gameMode || gameState.completed) {
+    if (
+        !gameState ||
+        gameState.mode !== gameMode ||
+        gameState.completed ||
+        gameState.version !== GAME_VERSION
+    ) {
         gameState = {
+            version: GAME_VERSION,
             mode: gameMode,
             currentRound: 1,
             score: 0,
@@ -60,6 +114,8 @@ if (gameMode && (revealImg || zoomImg)) {
     } else if (typeof gameState.wrongAttempts !== "number") {
         gameState.wrongAttempts = 0;
     }
+
+    updateRoundImage(gameState.currentRound);
 
     const updateRoundStatus = () => {
         roundStatus.textContent = `Ronde ${gameState.currentRound} van ${TOTAL_ROUNDS}`;
@@ -78,7 +134,7 @@ if (gameMode && (revealImg || zoomImg)) {
         nextRoundBtn.hidden = false;
         result.textContent = gameState.lastAnswerCorrect
             ? "Goed geraden! Je krijgt een punt."
-            : `Helaas, drie keer fout. Het was een kat.`;
+            : `Helaas, drie keer fout. Het was ${ROUNDS[gameState.currentRound - 1].name}.`;
     };
 
     const startNextRound = () => {
@@ -93,6 +149,7 @@ if (gameMode && (revealImg || zoomImg)) {
         delete gameState.lastAnswerCorrect;
         saveGameState(gameState);
         updateRoundStatus();
+        updateRoundImage(gameState.currentRound, true);
         answer.value = "";
         answer.disabled = false;
         answerForm.querySelector('button[type="submit"]').hidden = false;
@@ -101,12 +158,10 @@ if (gameMode && (revealImg || zoomImg)) {
         nextRoundBtn.hidden = true;
 
         if (revealImg) {
-            revealImg.classList.remove("is-revealed");
             revealBtn.hidden = false;
         }
 
         if (zoomImg) {
-            zoomImg.classList.remove("is-revealed");
             zoomBtn.hidden = false;
         }
     };
@@ -146,7 +201,8 @@ if (gameMode && (revealImg || zoomImg)) {
                 return;
             }
 
-            if (["kat", "cat"].includes(submittedAnswer)) {
+            const correctAnswer = ROUNDS[gameState.currentRound - 1].name.toLowerCase();
+            if (submittedAnswer === correctAnswer) {
                 gameState.currentRoundAnswered = true;
                 gameState.lastAnswerCorrect = true;
                 gameState.score += 1;
@@ -217,3 +273,18 @@ if (homeBtn) {
         window.location.href = "index.html";
     });
 }
+}
+
+initializeGame().catch(error => {
+    console.error("Could not initialize the game:", error);
+    const status = document.getElementById("round-status");
+    const summary = document.getElementById("resultSummary");
+    const message = "Could not load the game images. Please open the game through the local web server.";
+
+    if (status) {
+        status.textContent = message;
+    }
+    if (summary) {
+        summary.textContent = message;
+    }
+});

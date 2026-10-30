@@ -1,0 +1,27 @@
+[
+  {
+    "image": "cubone.png",
+    "name": "Cubone",
+    "hint": "Hint: This Pokémon wears a skull and carries a bone."
+  },
+  {
+    "image": "rayquaza_E.webp",
+    "name": "Rayquaza",
+    "hint": "Hint: This long, green Pokémon lives high above the clouds."
+  },
+  {
+    "image": "torchic.jpg",
+    "name": "Torchic",
+    "hint": "Hint: This small Fire-type Pokémon looks like a chick."
+  },
+  {
+    "image": "zekrom.png",
+    "name": "Zekrom",
+    "hint": "Hint: This legendary Pokémon is black and associated with electricity."
+  },
+  {
+    "image": "zeraora.png",
+    "name": "Zeraora",
+    "hint": "Hint: This fast, feline Pokémon uses electricity."
+  }
+]
