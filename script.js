@@ -28,6 +28,8 @@ const MAX_WRONG_ATTEMPTS = 3;
 const HINT_AFTER_ATTEMPTS = 2;
 const GAME_STATE_KEY = "4real-game-state";
 const GAME_VERSION = 2;
+let imageRequestId = 0;
+let currentImageUrl = "";
 
 const revealBtn = document.querySelector("#reveal-button");
 const revealImg = document.querySelector("#reveal-image");
@@ -64,7 +66,7 @@ function finishGame(state) {
     window.location.href = "endscreen.html";
 }
 
-function updateRoundImage(roundNumber, resetReveal = false) {
+async function updateRoundImage(roundNumber, resetReveal = false) {
     const round = ROUNDS[roundNumber - 1];
     const image = revealImg || zoomImg;
 
@@ -72,14 +74,44 @@ function updateRoundImage(roundNumber, resetReveal = false) {
         return;
     }
 
+    const requestId = ++imageRequestId;
+
     if (resetReveal) {
         image.classList.add("is-resetting");
         image.classList.remove("is-revealed");
     }
 
-    image.src = round.image;
     image.alt = round.name;
     hint.textContent = round.hint;
+
+    const response = await fetch(round.image);
+    if (!response.ok) {
+        throw new Error(`Could not load image ${round.image} (${response.status}).`);
+    }
+
+    const imageUrl = URL.createObjectURL(await response.blob());
+    if (requestId !== imageRequestId) {
+        URL.revokeObjectURL(imageUrl);
+        return;
+    }
+
+    image.src = imageUrl;
+    try {
+        await image.decode();
+    } catch (error) {
+        URL.revokeObjectURL(imageUrl);
+        throw new Error(`Could not decode image ${round.image}.`, { cause: error });
+    }
+
+    if (requestId !== imageRequestId) {
+        URL.revokeObjectURL(imageUrl);
+        return;
+    }
+
+    if (currentImageUrl) {
+        URL.revokeObjectURL(currentImageUrl);
+    }
+    currentImageUrl = imageUrl;
 
     if (resetReveal) {
         requestAnimationFrame(() => image.classList.remove("is-resetting"));
@@ -115,7 +147,7 @@ if (gameMode && (revealImg || zoomImg)) {
         gameState.wrongAttempts = 0;
     }
 
-    updateRoundImage(gameState.currentRound);
+    await updateRoundImage(gameState.currentRound);
 
     const updateRoundStatus = () => {
         roundStatus.textContent = `Ronde ${gameState.currentRound} van ${TOTAL_ROUNDS}`;
@@ -137,19 +169,27 @@ if (gameMode && (revealImg || zoomImg)) {
             : `Helaas, drie keer fout. Het was ${ROUNDS[gameState.currentRound - 1].name}.`;
     };
 
-    const startNextRound = () => {
+    const startNextRound = async () => {
         if (gameState.currentRound === TOTAL_ROUNDS) {
             finishGame(gameState);
             return;
         }
 
-        gameState.currentRound += 1;
+        const nextRoundNumber = gameState.currentRound + 1;
+        try {
+            await updateRoundImage(nextRoundNumber, true);
+        } catch (error) {
+            console.error("Could not load the next round image:", error);
+            result.textContent = "Could not load the next image. Please try again.";
+            return;
+        }
+
+        gameState.currentRound = nextRoundNumber;
         gameState.wrongAttempts = 0;
         gameState.currentRoundAnswered = false;
         delete gameState.lastAnswerCorrect;
         saveGameState(gameState);
         updateRoundStatus();
-        updateRoundImage(gameState.currentRound, true);
         answer.value = "";
         answer.disabled = false;
         answerForm.querySelector('button[type="submit"]').hidden = false;
@@ -233,7 +273,9 @@ if (gameMode && (revealImg || zoomImg)) {
             saveGameState(gameState);
         });
 
-        nextRoundBtn.addEventListener("click", startNextRound);
+        nextRoundBtn.addEventListener("click", () => {
+            startNextRound();
+        });
     }
 
     window.setTimeout(() => {
