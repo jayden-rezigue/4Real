@@ -1,51 +1,9 @@
-async function initializeGame() {
-const isGamePage = Boolean(document.body.dataset.gameMode);
-const isResultsPage = Boolean(document.getElementById("finalScore"));
-if (!isGamePage && !isResultsPage) {
-    return;
-}
-
-const response = await fetch("img.json");
-if (!response.ok) {
-    throw new Error(`Could not load img.json (${response.status}).`);
-}
-
-const ROUNDS = await response.json();
-if (
-    !Array.isArray(ROUNDS) ||
-    ROUNDS.length === 0 ||
-    ROUNDS.some(round =>
-        typeof round.image !== "string" ||
-        typeof round.name !== "string" ||
-        typeof round.hint !== "string"
-    )
-) {
-    throw new Error("img.json must contain rounds with image, name, and hint.");
-}
-
-const TOTAL_ROUNDS = ROUNDS.length;
+const ROUNDS_PER_GAME = 5;
+const MAX_POKEMON_ID = 1025;
 const MAX_WRONG_ATTEMPTS = 3;
 const HINT_AFTER_ATTEMPTS = 2;
 const GAME_STATE_KEY = "4real-game-state";
-const GAME_VERSION = 2;
-let imageRequestId = 0;
-let currentImageUrl = "";
-
-const revealBtn = document.querySelector("#reveal-button");
-const revealImg = document.querySelector("#reveal-image");
-const zoomBtn = document.querySelector("#zoom-button");
-const zoomImg = document.querySelector("#zoom-image");
-const info = document.getElementById("info");
-const blokje = document.querySelector("#blokje");
-const answerForm = document.querySelector("#answer-form");
-const answer = document.getElementById("answer-box");
-const result = document.getElementById("resultaat");
-const hint = document.getElementById("hint");
-const nextRoundBtn = document.getElementById("next-round-btn");
-const roundStatus = document.getElementById("round-status");
-const scoreElement = document.querySelector("#score");
-const teller = document.getElementById("teller");
-const gameMode = document.body.dataset.gameMode;
+const GAME_VERSION = 3;
 
 function getGameState() {
     const savedState = sessionStorage.getItem(GAME_STATE_KEY);
@@ -54,6 +12,65 @@ function getGameState() {
 
 function saveGameState(state) {
     sessionStorage.setItem(GAME_STATE_KEY, JSON.stringify(state));
+}
+
+function isValidRounds(rounds) {
+    return Array.isArray(rounds) &&
+        rounds.length === ROUNDS_PER_GAME &&
+        rounds.every(round =>
+            typeof round.image === "string" &&
+            typeof round.name === "string" &&
+            typeof round.hint === "string"
+        );
+}
+
+async function getPokemonRound(id) {
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}/`);
+    if (!response.ok) {
+        throw new Error(`Could not load Pokémon ${id} from PokéAPI (${response.status}).`);
+    }
+
+    const pokemon = await response.json();
+    const image = pokemon.sprites.other?.["official-artwork"]?.front_default ||
+        pokemon.sprites.front_default;
+
+    if (typeof pokemon.name !== "string" || typeof image !== "string") {
+        throw new Error(`PokéAPI returned incomplete data for Pokémon ${id}.`);
+    }
+
+    const name = pokemon.name.replace(/(^|-)([a-z])/g, (_, separator, letter) =>
+        `${separator}${letter.toUpperCase()}`
+    );
+    const types = pokemon.types.map(type => type.type.name).join(" / ");
+
+    return {
+        image,
+        name,
+        hint: types ? `Type: ${types}.` : "Guess the Pokémon!"
+    };
+}
+
+async function getRandomRounds() {
+    const pokemonIds = new Set();
+    while (pokemonIds.size < ROUNDS_PER_GAME) {
+        const id = Math.floor(Math.random() * MAX_POKEMON_ID) + 1;
+        pokemonIds.add(id);
+    }
+
+    return Promise.all([...pokemonIds].map(getPokemonRound));
+}
+
+function createGameState(mode, rounds) {
+    return {
+        version: GAME_VERSION,
+        mode,
+        currentRound: 1,
+        score: 0,
+        wrongAttempts: 0,
+        currentRoundAnswered: false,
+        completed: false,
+        rounds
+    };
 }
 
 function finishGame(state) {
@@ -66,16 +83,7 @@ function finishGame(state) {
     window.location.href = "endscreen.html";
 }
 
-async function updateRoundImage(roundNumber, resetReveal = false) {
-    const round = ROUNDS[roundNumber - 1];
-    const image = revealImg || zoomImg;
-
-    if (!round || !image) {
-        return;
-    }
-
-    const requestId = ++imageRequestId;
-
+async function showRoundImage(round, image, hint, resetReveal = false) {
     if (resetReveal) {
         image.classList.add("is-resetting");
         image.classList.remove("is-revealed");
@@ -83,250 +91,258 @@ async function updateRoundImage(roundNumber, resetReveal = false) {
 
     image.alt = round.name;
     hint.textContent = round.hint;
-
-    const response = await fetch(round.image);
-    if (!response.ok) {
-        throw new Error(`Could not load image ${round.image} (${response.status}).`);
-    }
-
-    const imageUrl = URL.createObjectURL(await response.blob());
-    if (requestId !== imageRequestId) {
-        URL.revokeObjectURL(imageUrl);
-        return;
-    }
-
-    image.src = imageUrl;
-    try {
-        await image.decode();
-    } catch (error) {
-        URL.revokeObjectURL(imageUrl);
-        throw new Error(`Could not decode image ${round.image}.`, { cause: error });
-    }
-
-    if (requestId !== imageRequestId) {
-        URL.revokeObjectURL(imageUrl);
-        return;
-    }
-
-    if (currentImageUrl) {
-        URL.revokeObjectURL(currentImageUrl);
-    }
-    currentImageUrl = imageUrl;
+    await new Promise((resolve, reject) => {
+        image.addEventListener("load", resolve, { once: true });
+        image.addEventListener("error", () => {
+            reject(new Error(`Could not load image ${round.image}.`));
+        }, { once: true });
+        image.src = round.image;
+    });
 
     if (resetReveal) {
         requestAnimationFrame(() => image.classList.remove("is-resetting"));
     }
 }
 
-if (info && blokje) {
-    info.addEventListener("click", () => {
-        blokje.classList.toggle("hidden");
-    });
-}
+function setupGame(state) {
+    const rounds = state.rounds;
+    const image = document.querySelector("#reveal-image, #zoom-image");
+    const revealButton = document.querySelector("#reveal-button, #zoom-button");
+    const answerForm = document.querySelector("#answer-form");
+    const answerInput = document.querySelector("#answer-box");
+    const submitButton = answerForm.querySelector('button[type="submit"]');
+    const result = document.querySelector("#resultaat");
+    const hint = document.querySelector("#hint");
+    const nextRoundButton = document.querySelector("#next-round-btn");
+    const roundStatus = document.querySelector("#round-status");
+    const scoreElement = document.querySelector("#score");
+    const streakElement = document.querySelector("#teller");
 
-if (gameMode && (revealImg || zoomImg)) {
-    let gameState = getGameState();
-
-    if (
-        !gameState ||
-        gameState.mode !== gameMode ||
-        gameState.completed ||
-        gameState.version !== GAME_VERSION
-    ) {
-        gameState = {
-            version: GAME_VERSION,
-            mode: gameMode,
-            currentRound: 1,
-            score: 0,
-            wrongAttempts: 0,
-            currentRoundAnswered: false,
-            completed: false
-        };
-        saveGameState(gameState);
-    } else if (typeof gameState.wrongAttempts !== "number") {
-        gameState.wrongAttempts = 0;
+    function updateStatus() {
+        roundStatus.textContent = `Ronde ${state.currentRound} van ${rounds.length}`;
+        scoreElement.textContent = `Points: ${state.score}`;
     }
 
-    await updateRoundImage(gameState.currentRound);
-
-    const updateRoundStatus = () => {
-        roundStatus.textContent = `Ronde ${gameState.currentRound} van ${TOTAL_ROUNDS}`;
-        if (scoreElement) {
-            scoreElement.textContent = `Points: ${gameState.score}`;
-        }
-    };
-
-    const showRoundResult = () => {
-        if (!gameState.currentRoundAnswered) {
+    function showResult() {
+        if (!state.currentRoundAnswered) {
             return;
         }
 
-        answer.disabled = true;
-        answerForm.querySelector('button[type="submit"]').hidden = true;
-        nextRoundBtn.hidden = false;
-        result.textContent = gameState.lastAnswerCorrect
-            ? "Goed geraden! Je krijgt een punt."
-            : `Helaas, drie keer fout. Het was ${ROUNDS[gameState.currentRound - 1].name}.`;
-    };
+        answerInput.disabled = true;
+        submitButton.hidden = true;
+        nextRoundButton.hidden = false;
 
-    const startNextRound = async () => {
-        if (gameState.currentRound === TOTAL_ROUNDS) {
-            finishGame(gameState);
+        if (state.lastAnswerCorrect) {
+            result.textContent = "Goed geraden! Je krijgt een punt.";
+        } else {
+            const answer = rounds[state.currentRound - 1].name;
+            result.textContent = `Helaas, drie keer fout. Het was ${answer}.`;
+        }
+    }
+
+    async function startNextRound() {
+        if (state.currentRound === rounds.length) {
+            finishGame(state);
             return;
         }
 
-        const nextRoundNumber = gameState.currentRound + 1;
+        const nextRoundNumber = state.currentRound + 1;
+        const nextRound = rounds[nextRoundNumber - 1];
+        nextRoundButton.disabled = true;
+
         try {
-            await updateRoundImage(nextRoundNumber, true);
+            await showRoundImage(nextRound, image, hint, true);
         } catch (error) {
             console.error("Could not load the next round image:", error);
             result.textContent = "Could not load the next image. Please try again.";
+            nextRoundButton.disabled = false;
             return;
         }
 
-        gameState.currentRound = nextRoundNumber;
-        gameState.wrongAttempts = 0;
-        gameState.currentRoundAnswered = false;
-        delete gameState.lastAnswerCorrect;
-        saveGameState(gameState);
-        updateRoundStatus();
-        answer.value = "";
-        answer.disabled = false;
-        answerForm.querySelector('button[type="submit"]').hidden = false;
+        state.currentRound = nextRoundNumber;
+        state.wrongAttempts = 0;
+        state.currentRoundAnswered = false;
+        delete state.lastAnswerCorrect;
+        saveGameState(state);
+        updateStatus();
+
+        answerInput.value = "";
+        answerInput.disabled = false;
+        submitButton.hidden = false;
         result.textContent = "";
         hint.classList.add("hidden");
-        nextRoundBtn.hidden = true;
-
-        if (revealImg) {
-            revealBtn.hidden = false;
-        }
-
-        if (zoomImg) {
-            zoomBtn.hidden = false;
-        }
-    };
-
-    updateRoundStatus();
-
-    if (revealBtn && revealImg) {
-        revealBtn.addEventListener("click", () => {
-            revealImg.classList.add("is-revealed");
-            revealBtn.hidden = true;
-        });
+        nextRoundButton.hidden = true;
+        nextRoundButton.disabled = false;
+        revealButton.hidden = false;
     }
 
-    if (zoomBtn && zoomImg) {
-        zoomBtn.addEventListener("click", () => {
-            zoomImg.classList.add("is-revealed");
-            zoomBtn.hidden = true;
-        });
-    }
+    image.addEventListener("error", () => {
+        result.textContent = "Could not load the Pokémon image. Please try again.";
+    });
 
-    if (answerForm && answer && result && hint && nextRoundBtn) {
-        if (gameState.wrongAttempts >= HINT_AFTER_ATTEMPTS) {
+    revealButton.addEventListener("click", () => {
+        image.classList.add("is-revealed");
+        revealButton.hidden = true;
+    });
+
+    answerForm.addEventListener("submit", event => {
+        event.preventDefault();
+
+        if (state.currentRoundAnswered) {
+            return;
+        }
+
+        const submittedAnswer = answerInput.value.trim().toLowerCase();
+        if (!submittedAnswer) {
+            result.textContent = "Vul eerst een antwoord in.";
+            return;
+        }
+
+        const correctAnswer = rounds[state.currentRound - 1].name
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "");
+        const normalizedAnswer = submittedAnswer.replace(/[^a-z0-9]/g, "");
+
+        if (normalizedAnswer === correctAnswer) {
+            state.currentRoundAnswered = true;
+            state.lastAnswerCorrect = true;
+            state.score += 1;
+            streakElement.textContent = `Streak: ${state.score}`;
+            saveGameState(state);
+            updateStatus();
+            showResult();
+            return;
+        }
+
+        state.wrongAttempts += 1;
+        if (state.wrongAttempts >= HINT_AFTER_ATTEMPTS) {
             hint.classList.remove("hidden");
         }
-        showRoundResult();
 
-        answerForm.addEventListener("submit", event => {
-            event.preventDefault();
+        if (state.wrongAttempts >= MAX_WRONG_ATTEMPTS) {
+            state.currentRoundAnswered = true;
+            state.lastAnswerCorrect = false;
+            saveGameState(state);
+            showResult();
+            return;
+        }
 
-            if (gameState.currentRoundAnswered) {
-                return;
-            }
+        result.textContent = "Fout antwoord! Probeer het nog eens.";
+        saveGameState(state);
+    });
 
-            const submittedAnswer = answer.value.trim().toLowerCase();
-            if (!submittedAnswer) {
-                result.textContent = "Vul eerst een antwoord in.";
-                return;
-            }
+    nextRoundButton.addEventListener("click", startNextRound);
 
-            const correctAnswer = ROUNDS[gameState.currentRound - 1].name.toLowerCase();
-            if (submittedAnswer === correctAnswer) {
-                gameState.currentRoundAnswered = true;
-                gameState.lastAnswerCorrect = true;
-                gameState.score += 1;
-                if (teller) {
-                    teller.textContent = `Streak: ${gameState.score}`;
-                }
-                result.textContent = "Goed geraden! Je krijgt een punt.";
-                saveGameState(gameState);
-                updateRoundStatus();
-                showRoundResult();
-                return;
-            }
+    return showRoundImage(
+        rounds[state.currentRound - 1],
+        image,
+        hint
+    ).then(() => {
+        updateStatus();
 
-            gameState.wrongAttempts += 1;
-            if (gameState.wrongAttempts >= HINT_AFTER_ATTEMPTS) {
-                hint.classList.remove("hidden");
-            }
+        if (state.wrongAttempts >= HINT_AFTER_ATTEMPTS) {
+            hint.classList.remove("hidden");
+        }
 
-            if (gameState.wrongAttempts >= MAX_WRONG_ATTEMPTS) {
-                gameState.currentRoundAnswered = true;
-                gameState.lastAnswerCorrect = false;
-                saveGameState(gameState);
-                showRoundResult();
-                return;
-            }
+        showResult();
+        window.setTimeout(() => finishGame(state), 3 * 60 * 1000);
+    });
+}
 
-            result.textContent = "Fout antwoord! Probeer het nog eens.";
+function setupResults(state) {
+    const score = state ? state.score : 0;
+    const roundCount = state && isValidRounds(state.rounds) ? state.rounds.length : 0;
+
+    document.querySelector("#finalScore").textContent = score;
+    document.querySelector("#resultSummary").textContent =
+        `Je hebt ${score} van de ${roundCount} punten gehaald.`;
+}
+
+function setupInfoButton() {
+    const infoButton = document.querySelector("#info");
+    const infoBox = document.querySelector("#blokje");
+
+    if (infoButton && infoBox) {
+        infoButton.addEventListener("click", () => {
+            infoBox.classList.toggle("hidden");
+        });
+    }
+}
+
+function setupEndScreen() {
+    const playAgainButton = document.querySelector("#playAgainBtn");
+    const homeButton = document.querySelector("#homeBtn");
+
+    if (playAgainButton) {
+        playAgainButton.addEventListener("click", () => {
+            const state = getGameState();
+            const gamePage = state && ["blur", "zoom"].includes(state.mode)
+                ? `${state.mode}.html`
+                : "index.html";
+
+            sessionStorage.removeItem(GAME_STATE_KEY);
+            window.location.href = gamePage;
+        });
+    }
+
+    if (homeButton) {
+        homeButton.addEventListener("click", () => {
+            sessionStorage.removeItem(GAME_STATE_KEY);
+            window.location.href = "index.html";
+        });
+    }
+}
+
+async function initializeGame() {
+    setupInfoButton();
+
+    const gameMode = document.body.dataset.gameMode;
+    const isResultsPage = Boolean(document.querySelector("#finalScore"));
+    if (!gameMode && !isResultsPage) {
+        setupEndScreen();
+        return;
+    }
+
+    let gameState = getGameState();
+    if (gameMode) {
+        const needsNewGame = !gameState ||
+            gameState.mode !== gameMode ||
+            gameState.completed ||
+            gameState.version !== GAME_VERSION ||
+            !isValidRounds(gameState.rounds) ||
+            !Number.isInteger(gameState.currentRound) ||
+            gameState.currentRound < 1 ||
+            gameState.currentRound > gameState.rounds.length;
+
+        if (needsNewGame) {
+            const roundStatus = document.querySelector("#round-status");
+            roundStatus.textContent = "Loading random Pokémon...";
+            gameState = createGameState(gameMode, await getRandomRounds());
             saveGameState(gameState);
-        });
+        } else if (typeof gameState.wrongAttempts !== "number") {
+            gameState.wrongAttempts = 0;
+        }
 
-        nextRoundBtn.addEventListener("click", () => {
-            startNextRound();
-        });
+        await setupGame(gameState);
     }
 
-    window.setTimeout(() => {
-        finishGame(gameState);
-    }, 3 * 60 * 1000);
-}
-
-const finalScore = document.getElementById("finalScore");
-const resultSummary = document.getElementById("resultSummary");
-
-if (finalScore) {
-    const gameState = getGameState();
-    finalScore.textContent = gameState ? gameState.score : "0";
-    if (resultSummary) {
-        resultSummary.textContent = `Je hebt ${gameState ? gameState.score : 0} van de ${TOTAL_ROUNDS} punten gehaald.`;
+    if (isResultsPage) {
+        setupResults(gameState);
+        setupEndScreen();
     }
-}
-
-const playAgainBtn = document.getElementById("playAgainBtn");
-const homeBtn = document.getElementById("homeBtn");
-
-if (playAgainBtn) {
-    playAgainBtn.addEventListener("click", () => {
-        const gameState = getGameState();
-        const gamePage = gameState && ["blur", "zoom"].includes(gameState.mode)
-            ? `${gameState.mode}.html`
-            : "index.html";
-
-        sessionStorage.removeItem(GAME_STATE_KEY);
-        window.location.href = gamePage;
-    });
-}
-
-if (homeBtn) {
-    homeBtn.addEventListener("click", () => {
-        sessionStorage.removeItem(GAME_STATE_KEY);
-        window.location.href = "index.html";
-    });
-}
 }
 
 initializeGame().catch(error => {
     console.error("Could not initialize the game:", error);
-    const status = document.getElementById("round-status");
-    const summary = document.getElementById("resultSummary");
-    const message = "Could not load the game images. Please open the game through the local web server.";
 
-    if (status) {
-        status.textContent = message;
+    const message = "Could not load random Pokémon. Check your internet connection and try again.";
+    const roundStatus = document.querySelector("#round-status");
+    const resultSummary = document.querySelector("#resultSummary");
+
+    if (roundStatus) {
+        roundStatus.textContent = message;
     }
-    if (summary) {
-        summary.textContent = message;
+    if (resultSummary) {
+        resultSummary.textContent = message;
     }
 });
