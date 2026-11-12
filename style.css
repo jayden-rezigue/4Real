@@ -108,6 +108,58 @@ nav {
     text-align: center;
 }
 
+.leaderboard {
+    width: min(90%, 32rem);
+    margin: 2rem auto;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.leaderboard h2 {
+    margin-top: 0;
+}
+
+.leaderboard-note {
+    color: #526170;
+    font-size: 0.9rem;
+}
+
+.leaderboard table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.leaderboard th,
+.leaderboard td {
+    padding: 0.6rem;
+    border-bottom: 1px solid #dfeeff;
+    text-align: left;
+}
+
+.leaderboard th:last-child,
+.leaderboard td:last-child {
+    text-align: right;
+}
+
+.leaderboard-form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem auto;
+}
+
+.leaderboard-form[hidden] {
+    display: none;
+}
+
+.leaderboard-form input {
+    padding: 0.5rem;
+}
+
 .round-status {
     position: static;
     margin: 1rem 1.5rem 0;

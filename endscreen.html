@@ -30,6 +30,27 @@
             <p id="resultSummary" class="subtitle"></p>
         </section>
 
+        <form id="leaderboard-form" class="leaderboard-form">
+            <label for="leaderboard-name">Zet je score op de Top 10:</label>
+            <input id="leaderboard-name" name="name" type="text" maxlength="20" required>
+            <button type="submit" class="endscreen-btn">Score opslaan</button>
+        </form>
+        <p id="leaderboard-message" aria-live="polite"></p>
+        <section class="leaderboard">
+            <h2>Top 10</h2>
+            <p class="leaderboard-note">Scores saved in this browser</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Points</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-entries"></tbody>
+            </table>
+        </section>
+
         <div class="buttons">
             <button id="playAgainBtn" class="mode-btn endscreen-btn">Opnieuw spelen</button>
             <button id="homeBtn" class="mode-btn endscreen-btn">

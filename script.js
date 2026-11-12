@@ -3,6 +3,7 @@ const MAX_POKEMON_ID = 1025;
 const MAX_WRONG_ATTEMPTS = 3;
 const HINT_AFTER_ATTEMPTS = 2;
 const GAME_STATE_KEY = "4real-game-state";
+const LEADERBOARD_KEY = "4real-leaderboard";
 const GAME_VERSION = 3;
 
 function getGameState() {
@@ -12,6 +13,64 @@ function getGameState() {
 
 function saveGameState(state) {
     sessionStorage.setItem(GAME_STATE_KEY, JSON.stringify(state));
+}
+
+function getLeaderboardEntries() {
+    const savedEntries = localStorage.getItem(LEADERBOARD_KEY);
+    if (!savedEntries) {
+        return [];
+    }
+
+    const entries = JSON.parse(savedEntries);
+    if (!Array.isArray(entries)) {
+        throw new Error("Saved leaderboard data must be a list.");
+    }
+
+    return entries.filter(entry =>
+        entry &&
+        typeof entry.name === "string" &&
+        Number.isInteger(entry.score) &&
+        Number.isFinite(entry.savedAt)
+    );
+}
+
+function showLeaderboard() {
+    const tableBody = document.querySelector("#leaderboard-entries");
+    if (!tableBody) {
+        return;
+    }
+
+    const entries = getLeaderboardEntries();
+    tableBody.replaceChildren();
+
+    if (entries.length === 0) {
+        const row = tableBody.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 3;
+        cell.textContent = "No scores yet. Play a game to get on the board!";
+        return;
+    }
+
+    entries.forEach((entry, index) => {
+        const row = tableBody.insertRow();
+        row.insertCell().textContent = index + 1;
+        row.insertCell().textContent = entry.name;
+        row.insertCell().textContent = entry.score;
+    });
+}
+
+function saveLeaderboardEntry(name, score) {
+    const entries = getLeaderboardEntries();
+    const newEntry = { name, score, savedAt: Date.now() };
+
+    entries.push(newEntry);
+    entries.sort((first, second) =>
+        second.score - first.score || first.savedAt - second.savedAt
+    );
+
+    const topEntries = entries.slice(0, 10);
+    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(topEntries));
+    return topEntries.indexOf(newEntry) + 1;
 }
 
 function isValidRounds(rounds) {
@@ -258,6 +317,41 @@ function setupResults(state) {
         `Je hebt ${score} van de ${roundCount} punten gehaald.`;
 }
 
+function setupLeaderboard(state) {
+    const form = document.querySelector("#leaderboard-form");
+    const message = document.querySelector("#leaderboard-message");
+    if (!form || !message) {
+        return;
+    }
+
+    if (!state || state.leaderboardSubmitted) {
+        form.hidden = true;
+        if (state && state.leaderboardSubmitted) {
+            message.textContent = "Je score is al opgeslagen.";
+        }
+        return;
+    }
+
+    form.addEventListener("submit", event => {
+        event.preventDefault();
+
+        const name = document.querySelector("#leaderboard-name").value.trim();
+        if (!name) {
+            message.textContent = "Vul eerst je naam in.";
+            return;
+        }
+
+        const rank = saveLeaderboardEntry(name, state.score);
+        state.leaderboardSubmitted = true;
+        saveGameState(state);
+        form.hidden = true;
+        message.textContent = rank
+            ? `Score opgeslagen! Je staat op plek ${rank}.`
+            : "Score opgeslagen, maar helaas niet in de Top 10.";
+        showLeaderboard();
+    });
+}
+
 function setupInfoButton() {
     const infoButton = document.querySelector("#info");
     const infoBox = document.querySelector("#blokje");
@@ -295,6 +389,7 @@ function setupEndScreen() {
 
 async function initializeGame() {
     setupInfoButton();
+    showLeaderboard();
 
     const gameMode = document.body.dataset.gameMode;
     const isResultsPage = Boolean(document.querySelector("#finalScore"));
@@ -328,6 +423,7 @@ async function initializeGame() {
 
     if (isResultsPage) {
         setupResults(gameState);
+        setupLeaderboard(gameState);
         setupEndScreen();
     }
 }
