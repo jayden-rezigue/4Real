@@ -1,5 +1,6 @@
 
 const scoreElement = document.querySelector("#score");
+const streakElement = document.querySelector("#teller");
 const revealBtn = document.querySelector("#reveal-button");
 const revealImg = document.querySelector("#reveal-image");
 const zoomBtn = document.querySelector("#zoom-button");
@@ -15,23 +16,37 @@ const blokje = document.querySelector("#blokje");
 const goedAntwoord = "cat";
 
 let score = 0;
-let revealPhase = 1;
+let streak = 0;
+let revealComplete = false;
+let pendingRevealTransitions = new Set();
 let answeredCorrectly = false;
 
 
 if (revealBtn && revealImg) {
+    revealImg.addEventListener("transitionend", event => {
+        pendingRevealTransitions.delete(event.propertyName);
+        if (pendingRevealTransitions.size === 0 && revealImg.classList.contains("is-revealed")) {
+            revealComplete = true;
+        }
+    });
     revealBtn.addEventListener("click", () => {
+        pendingRevealTransitions = new Set(["filter", "opacity"]);
         revealImg.classList.add("is-revealed");
-        revealPhase = 2;
         revealBtn.remove();
     });
 }
 
 
 if (zoomBtn && zoomImg) {
+    zoomImg.addEventListener("transitionend", event => {
+        pendingRevealTransitions.delete(event.propertyName);
+        if (pendingRevealTransitions.size === 0 && zoomImg.classList.contains("is-revealed")) {
+            revealComplete = true;
+        }
+    });
     zoomBtn.addEventListener("click", () => {
+        pendingRevealTransitions = new Set(["transform"]);
         zoomImg.classList.add("is-revealed");
-        revealPhase = 3;
         zoomBtn.remove();
     });
 }
@@ -53,8 +68,9 @@ if (btnSubmit && answer && result && scoreElement) {
             goedAntwoord.toLowerCase()
         ) {
             if (!answeredCorrectly) {
-                result.textContent = "Goed antwoord!";
-                updateScore(getPoints());
+                const points = getPoints();
+                result.textContent = `Goed antwoord! +${points} punt${points === 1 ? "" : "en"}.`;
+                updateScore(points);
                 answeredCorrectly = true;
             } else {
                 result.textContent =
@@ -70,15 +86,13 @@ if (btnSubmit && answer && result && scoreElement) {
 function updateScore(points) {
     score += points;
     scoreElement.textContent = `Points: ${score}`;
+    streak += 1;
+    if (streakElement) {
+        streakElement.textContent = `Streak: ${streak}`;
+    }
 }
 
 
 function getPoints() {
-    if (revealPhase === 1) {
-        return 100;
-    } else if (revealPhase === 2) {
-        return 50;
-    } else {
-        return 25;
-    }
+    return revealComplete ? 1 : 2;
 }
