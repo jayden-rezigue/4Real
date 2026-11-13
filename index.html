@@ -1,72 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body class="body">
 
-            <header>
-                <nav class="home-nav">
-                    <ul class="links">
-                        <li><a href="index.html">Home</a></li>
-                        <li><a href="blur.html">Blur mode</a></li>
-                        <li><a href="zoom.html">Zoom mode</a></li>
-                    </ul>
-                    <div class="nav-brand">
-                        <h1 class="title">4Real</h1>
-                        <img class="cat" src="img-folder/4real-cat.png" alt="4Real logo">
-                    </div>
-                </nav>
-            </header>
-   <div class="info-container">
-    <section id="blokje" class="hidden">
-        <p class="tekst">
-            Doel van het spel: Raad zo snel mogelijk wat er op de afbeelding staat.
-            <br><br>
-            Antwoord geven: Typ je antwoord in het antwoordvak en druk op de knop om je antwoord in te sturen.
-            <br><br>
-            Punten verdienen: Elk goed antwoord levert punten op.
-            <br><br>
-            Zoom Out: De afbeelding begint ingezoomd. Hoe langer je wacht, hoe meer je kunt zien.
-            <br><br>
-            Blurry: De afbeelding begint wazig. Hoe langer je wacht, hoe scherper de afbeelding wordt.
-            <br><br>
-            Kies je spelmodus: Kies vóór het spelen tussen Zoom Out en Blurry.
-        </p>
-    </section>
+    <header>
+        <nav class="home-nav">
+            <ul class="links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="blur.html">Blur mode</a></li>
+                <li><a href="zoom.html">Zoom mode</a></li>
+            </ul>
+            <div class="nav-brand">
+                <h1 class="title">4Real</h1>
+                <img class="cat" src="img-folder/4real-cat.png" alt="4Real logo">
+            </div>
+        </nav>
+    </header>
+    <div class="info-container">
+        <section id="blokje" class="hidden">
+            <p class="tekst">
+                Doel van het spel: Raad zo snel mogelijk wat er op de afbeelding staat.
+                <br><br>
+                Antwoord geven: Typ je antwoord in het antwoordvak en druk op de knop om je antwoord in te sturen.
+                <br><br>
+                Punten verdienen: Een goed antwoord levert 2 punten op zolang de afbeelding nog niet volledig is
+                onthuld, en 1 punt als dat wel zo is.
 
-    <button id="info">Info</button>
-</div>
-            <main class="main-content">
-            <h2 class="text"> 4Real is een reveal game met 2 modes zoom en blur </h2>
-            <section class="mode-buttons">
-                <div class="mode-tooltip">
-                    <a class="mode-btn" href="blur.html">Blur mode</a>
-                    <span class="tooltip-text">Blur the image to hide details.</span>
-                </div>
-                <div class="mode-tooltip">
-                    <a class="mode-btn" href="zoom.html">Zoom mode</a>
-                    <span class="tooltip-text">Zoom in on the image to see details.</span>
-                </div>
-            </section>
-            <section class="leaderboard">
-                <h2>Top 10</h2>
-                <p class="leaderboard-note">Scores saved in this browser</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Name</th>
-                            <th scope="col">Points</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leaderboard-entries"></tbody>
-                </table>
-            </section>
-        </main>
+                <br><br>
+                Zoom Out: De afbeelding begint ingezoomd. Hoe langer je wacht, hoe meer je kunt zien.
+                <br><br>
+                Blurry: De afbeelding begint wazig. Hoe langer je wacht, hoe scherper de afbeelding wordt.
+                <br><br>
+                Kies je spelmodus: Kies vóór het spelen tussen Zoom Out en Blurry.
+            </p>
+        </section>
+
+        <button id="info">Info</button>
+    </div>
+    <main class="main-content">
+        <h2 class="text"> 4Real is een reveal game met 2 modes zoom en blur </h2>
+        <section class="mode-buttons">
+            <div class="mode-tooltip">
+                <a class="mode-btn" href="blur.html">Blur mode</a>
+                <span class="tooltip-text">Blur the image to hide details.</span>
+            </div>
+            <div class="mode-tooltip">
+                <a class="mode-btn" href="zoom.html">Zoom mode</a>
+                <span class="tooltip-text">Zoom in on the image to see details.</span>
+            </div>
+        </section>
+        <section class="leaderboard">
+            <h2>Top 10</h2>
+            <p class="leaderboard-note">Scores saved in this browser</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Points</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-entries"></tbody>
+            </table>
+        </section>
+    </main>
 
 
 
@@ -74,4 +78,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>

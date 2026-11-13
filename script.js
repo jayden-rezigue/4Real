@@ -125,6 +125,7 @@ function createGameState(mode, rounds) {
         mode,
         currentRound: 1,
         score: 0,
+        streak: 0,
         wrongAttempts: 0,
         currentRoundAnswered: false,
         completed: false,
@@ -176,10 +177,17 @@ function setupGame(state) {
     const roundStatus = document.querySelector("#round-status");
     const scoreElement = document.querySelector("#score");
     const streakElement = document.querySelector("#teller");
+    let imageFullyRevealed = false;
+
+    if (!Number.isInteger(state.streak) || state.streak < 0) {
+        state.streak = 0;
+        saveGameState(state);
+    }
 
     function updateStatus() {
         roundStatus.textContent = `Ronde ${state.currentRound} van ${rounds.length}`;
         scoreElement.textContent = `Points: ${state.score}`;
+        streakElement.textContent = `Streak: ${state.streak}`;
     }
 
     function showResult() {
@@ -192,7 +200,8 @@ function setupGame(state) {
         nextRoundButton.hidden = false;
 
         if (state.lastAnswerCorrect) {
-            result.textContent = "Goed geraden! Je krijgt een punt.";
+            const points = state.lastAnswerPoints || 1;
+            result.textContent = `Goed geraden! Je krijgt ${points} ${points === 1 ? "punt" : "punten"}.`;
         } else {
             const answer = rounds[state.currentRound - 1].name;
             result.textContent = `Helaas, drie keer fout. Het was ${answer}.`;
@@ -222,6 +231,8 @@ function setupGame(state) {
         state.wrongAttempts = 0;
         state.currentRoundAnswered = false;
         delete state.lastAnswerCorrect;
+        delete state.lastAnswerPoints;
+        imageFullyRevealed = false;
         saveGameState(state);
         updateStatus();
 
@@ -237,6 +248,15 @@ function setupGame(state) {
 
     image.addEventListener("error", () => {
         result.textContent = "Could not load the Pokémon image. Please try again.";
+    });
+
+    image.addEventListener("transitionend", event => {
+        const revealProperty = image.id === "reveal-image" ? "filter" : "transform";
+        if (event.target === image &&
+            event.propertyName === revealProperty &&
+            image.classList.contains("is-revealed")) {
+            imageFullyRevealed = true;
+        }
     });
 
     revealButton.addEventListener("click", () => {
@@ -265,8 +285,9 @@ function setupGame(state) {
         if (normalizedAnswer === correctAnswer) {
             state.currentRoundAnswered = true;
             state.lastAnswerCorrect = true;
-            state.score += 1;
-            streakElement.textContent = `Streak: ${state.score}`;
+            state.lastAnswerPoints = imageFullyRevealed ? 1 : 2;
+            state.score += state.lastAnswerPoints;
+            state.streak += 1;
             saveGameState(state);
             updateStatus();
             showResult();
@@ -314,7 +335,7 @@ function setupResults(state) {
 
     document.querySelector("#finalScore").textContent = score;
     document.querySelector("#resultSummary").textContent =
-        `Je hebt ${score} van de ${roundCount} punten gehaald.`;
+        `Je hebt ${score} van de ${roundCount * 2} punten gehaald.`;
 }
 
 function setupLeaderboard(state) {
